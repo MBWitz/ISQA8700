@@ -1,0 +1,130 @@
+# Import relevant libraries
+
+import pandas as pd
+import numpy as np
+import patsy as pt
+import datetime
+from sklearn import tree
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier,\
+	BaggingClassifier, GradientBoostingClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+from sklearn.svm import SVC
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+### IMPORT DATA, PERFORM PRE-PROCESSING
+news = pd.read_csv('C:\\Users\\molly\\Documents\\School\\ISQA8700\\OnlineNewsPopularity.csv')
+
+# Look at columns to gain familiarity with the data
+# news.columns
+
+# Dropping data for ease of handling 
+news.drop(['url', ' timedelta'], axis = 1, inplace=True)
+# view
+# news.columns
+
+# eliminate leading space from variable names
+news.columns = news.columns.str.strip()
+# view first 10 lines of data
+news.head(10)
+
+# convert shares from string to numeric
+pd.to_numeric(news['shares'], errors='coerce')
+
+# Add a dummy variable for shares greater than or equal to 3400 (1) or less than 3400 (0).
+def f(row):
+    if row['shares'] < 3400:
+        val = 0
+    else:
+        val = 1
+    return val
+
+news['gt3400'] = news.apply(f, axis=1)
+
+# Obtain number of successes (shares>=3400) and total count. 
+print(np.sum(news['gt3400']))
+print(len(news.index))
+
+# Dropping data that is too highly correlated 
+news.drop(['data_channel_is_world', 'kw_min_min', 'kw_max_min', 'kw_min_max', 'kw_max_max', 'kw_max_avg',
+       'self_reference_min_shares', 'self_reference_max_shares', 'weekday_is_saturday', 'weekday_is_sunday', 'shares'], 
+        axis = 1, inplace=True)
+        
+# Identify dependent and independent variables:
+Y = news['gt3400']
+X = news.drop(['gt3400'], axis=1)
+
+# Randomly create train(.67) and test(.33) data split
+x, xt, y, yt = train_test_split(X, Y, test_size = 0.33, random_state=42)
+
+# y based matrices flattened for ease with machine learning codes
+y = np.ravel(y)
+yt = np.ravel(yt)
+
+# Obtaining descriptive statistics of how many and what percent of each subset are successes
+print(np.sum(y))
+print(np.sum(yt))
+print(100*np.mean(y))
+print(100*np.mean(yt))
+
+# # Obtaining codes to implement a decision tree
+from sklearn.ensemble import RandomForestClassifier, BaggingClassifier, GradientBoostingClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import f1_score
+model = DecisionTreeClassifier()
+
+# Generate the decision tree model
+tree = DecisionTreeClassifier(max_depth=5,min_samples_leaf=10)
+# Fit the tree to the training data
+tclf = tree.fit(x, y)
+# Make predictions
+tpred = tclf.predict(xt)
+# Print the accuracy score of the fitted model
+print("\nThe decision tree has an accuracy of : %s\n" %str(accuracy_score(tpred, yt)))
+print("\nThe decision tree has f1 score of : %s\n" %str(f1_score(tpred, yt)))
+# Correct successes predicted
+yt1 = yt + tpred
+print("\nThe correct number of predicts are : %s\n" %str((yt1 == 2).sum()))
+
+# Generate the random forest model and iterate with n=10, n=100 and n=150
+forest = RandomForestClassifier(n_estimators=150, n_jobs = -1, random_state=42)
+# Fit the model to the training data
+fclf = forest.fit(x, y)
+# Make predictions
+fpred = fclf.predict(xt)
+# Print the accuracy score of the fitted model
+print("The random forest has an accuracy of : %s\n" % str(accuracy_score(fpred, yt)))
+print("\nThe random has f1 score of : %s\n" %str(f1_score(fpred, yt)))
+# Correct successes predicted
+yt2 = yt + fpred
+print("\nThe correct number of predicts are : %s\n" %str((yt2 == 2).sum()))
+
+# Generate the boosting model, also with n=100
+boost = GradientBoostingClassifier(n_estimators=100, max_depth=15, min_samples_leaf=10, random_state=42)
+# Fit the model to the training data
+boclf = boost.fit(x, y)
+# Make predictions
+bopred = boclf.predict(xt)
+# Print the accuracy score of the fitted model
+print("The boosting algorithm has an accuracy of : %s\n" % str(accuracy_score(bopred, yt)))
+print("\nThe random has f1 score of : %s\n" % str(f1_score(bopred, yt)))
+# Correct successes predicted
+yt3 = yt + bopred
+print("\nThe correct number of predicts are : %s\n" %str((yt3 == 2).sum()))
+
+# Generate the bagging model, with n=100
+bag = BaggingClassifier(n_estimators=150, n_jobs = -1, random_state=42)
+# Fit the model to the training data
+baclf = bag.fit(x, y)
+# Make predictions
+bapred = baclf.predict(xt)
+# Print the accuracy score of the fitted model
+print("The bagging algorithm has an accuracy of : %s\n" % str(accuracy_score(bapred, yt)))
+print("\nThe random has f1 score of : %s\n" %str(f1_score(bapred, yt)))
+# Correct successes predicted
+yt4 = yt + bapred
+print("\nThe correct number of predicts are : %s\n" %str((yt4 == 2).sum()))
+
+
