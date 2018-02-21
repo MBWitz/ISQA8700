@@ -40,7 +40,7 @@ def f(row):
     else:
         val = 1
     return val
-
+# Add the column to the data frame
 news['gt3400'] = news.apply(f, axis=1)
 
 # Obtain number of successes (shares>=3400) and total count. 
