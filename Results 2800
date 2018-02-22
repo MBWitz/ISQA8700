@@ -1,0 +1,43 @@
+Cutoff of: 2800
+
+Kept Saturday and Sunday, eliminated weekend:
+# Dropping data that is too highly correlated 
+news.drop(['data_channel_is_world', 'kw_min_min', 'kw_max_min', 'kw_min_max', 'kw_max_max', 'kw_max_avg',
+       'self_reference_min_shares', 'self_reference_max_shares', 'is_weekend', 'shares'], 
+        axis = 1, inplace=True)
+
+Actual Split:
+successes: 9989
+total records: 39644
+
+Train/Test data split:
+train successes: 6676
+test successes: 3313
+25.134595836% successes
+25.322938164% successes
+
+RESULTS:
+
+Decision Tree: 
+tree = DecisionTreeClassifier(max_depth=20,min_samples_leaf=5)
+The decision tree has an accuracy of : 0.675380264465
+The decision tree has f1 score of : 0.326407613006
+The correct number of predicts are : 1029
+
+Random Forest:
+forest = RandomForestClassifier(n_estimators=10, n_jobs = -1, random_state=42)
+The random forest has an accuracy of : 0.74195520905
+The random has f1 score of : 0.216341689879
+The correct number of predicts are : 466
+
+Boosting:
+boost = GradientBoostingClassifier(n_estimators=100, max_depth=20, min_samples_leaf=5, random_state=42)
+The boosting algorithm has an accuracy of : 0.751815332875
+The random has f1 score of : 0.254762451228
+The correct number of predicts are : 555
+
+Bagging:
+bag = BaggingClassifier(n_estimators=10, n_jobs = -1, random_state=42)
+The bagging algorithm has an accuracy of : 0.738744936177
+The random has f1 score of : 0.245474613687
+The correct number of predicts are : 556
