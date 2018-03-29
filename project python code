@@ -15,7 +15,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
 ### IMPORT DATA, PERFORM PRE-PROCESSING
-
 news = pd.read_csv('C:\\Users\\molly\\Documents\\School\\ISQA8700\\OnlineNewsPopularity.csv')
 
 # Look at columns to gain familiarity with the data
@@ -24,17 +23,18 @@ news = pd.read_csv('C:\\Users\\molly\\Documents\\School\\ISQA8700\\OnlineNewsPop
 # Dropping data for ease of handling 
 news.drop(['url', ' timedelta'], axis = 1, inplace=True)
 
-
 # eliminate leading space from variable names
 news.columns = news.columns.str.strip()
 
-
+# List of columns:
 # news.columns
-
+# First 10 rows of data:
 # news.head(10)
 
+# Change 'shares' to a numeric field:
 pd.to_numeric(news['shares'], errors='coerce')
 
+# Check data types for all columns:
 # print(news.dtypes)
 
 # Add an indicator for shares greater than or equal to 2800 (1) or less than 2800 (0).
@@ -47,6 +47,7 @@ def f(row):
 
 news['gt2800'] = news.apply(f, axis=1)
 
+# view first 10 rows of data:
 # news.head(10)
 
 # Obtain number of successes and thier occurance in entire data. 
@@ -79,7 +80,7 @@ print(np.sum(yt))
 print(100*np.mean(y))
 print(100*np.mean(yt))
 
-# Obtaining codes to implement a decision tree
+# Obtaining codes to implement a DECISION TREE:
 from sklearn.ensemble import RandomForestClassifier, BaggingClassifier, GradientBoostingClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import f1_score
@@ -98,7 +99,7 @@ print("\nThe decision tree has f1 score of : %s\n" %str(f1_score(tpred, yt)))
 yt1 = yt + tpred
 print("\nThe correct number of predicts are : %s\n" %str((yt1 == 2).sum()))
 
-# Generate the random forest model and iterate with n=10
+# Generate the RANDOM FOREST model and iterate with n=10
 forest = RandomForestClassifier(n_estimators=10, n_jobs = -1, random_state=42)
 # Fit the model to the training data
 fclf = forest.fit(x, y)
@@ -111,7 +112,7 @@ print("\nThe random has f1 score of : %s\n" %str(f1_score(fpred, yt)))
 yt2 = yt + fpred
 print("\nThe correct number of predicts are : %s\n" %str((yt2 == 2).sum()))
 
-# Generate the boosting model, also with n=100
+# Generate the BOOSTING model, also with n=100
 boost = GradientBoostingClassifier(n_estimators=100, max_depth=20, min_samples_leaf=5, random_state=42)
 # Fit the model to the training data
 boclf = boost.fit(x, y)
@@ -124,7 +125,7 @@ print("\nThe random has f1 score of : %s\n" % str(f1_score(bopred, yt)))
 yt3 = yt + bopred
 print("\nThe correct number of predicts are : %s\n" %str((yt3 == 2).sum()))
 
-# Generate the bagging model, with n=100
+# Generate the BAGGING model, with n=100
 bag = BaggingClassifier(n_estimators=10, n_jobs = -1, random_state=42)
 # Fit the model to the training data
 baclf = bag.fit(x, y)
@@ -137,7 +138,7 @@ print("\nThe random has f1 score of : %s\n" %str(f1_score(bapred, yt)))
 yt4 = yt + bapred
 print("\nThe correct number of predicts are : %s\n" %str((yt4 == 2).sum()))
 
-# Linear regression model:
+# Linear REGRESSION model:
 import statsmodels.api as sm
 x = sm.add_constant(x)
 model = sm.OLS(y, x).fit()
