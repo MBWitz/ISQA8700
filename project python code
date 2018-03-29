@@ -15,6 +15,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
 ### IMPORT DATA, PERFORM PRE-PROCESSING
+
 news = pd.read_csv('C:\\Users\\molly\\Documents\\School\\ISQA8700\\OnlineNewsPopularity.csv')
 
 # Look at columns to gain familiarity with the data
@@ -22,61 +23,70 @@ news = pd.read_csv('C:\\Users\\molly\\Documents\\School\\ISQA8700\\OnlineNewsPop
 
 # Dropping data for ease of handling 
 news.drop(['url', ' timedelta'], axis = 1, inplace=True)
-# view
-# news.columns
+
 
 # eliminate leading space from variable names
 news.columns = news.columns.str.strip()
-# view first 10 lines of data
-news.head(10)
 
-# convert shares from string to numeric
+
+# news.columns
+
+# news.head(10)
+
 pd.to_numeric(news['shares'], errors='coerce')
 
-# Add a dummy variable for shares greater than or equal to 3400 (1) or less than 3400 (0).
+# print(news.dtypes)
+
+# Add an indicator for shares greater than or equal to 2800 (1) or less than 2800 (0).
 def f(row):
-    if row['shares'] < 3400:
+    if row['shares'] < 2800:
         val = 0
     else:
         val = 1
     return val
-# Add the column to the data frame
-news['gt3400'] = news.apply(f, axis=1)
 
-# Obtain number of successes (shares>=3400) and total count. 
-print(np.sum(news['gt3400']))
+news['gt2800'] = news.apply(f, axis=1)
+
+# news.head(10)
+
+# Obtain number of successes and thier occurance in entire data. 
+print(np.sum(news['gt2800']))
 print(len(news.index))
 
-# Dropping data that is too highly correlated 
+# Dropping data that is too highly correlated, or represented by another field
 news.drop(['data_channel_is_world', 'kw_min_min', 'kw_max_min', 'kw_min_max', 'kw_max_max', 'kw_max_avg',
-       'self_reference_min_shares', 'self_reference_max_shares', 'weekday_is_saturday', 'weekday_is_sunday', 'shares'], 
-        axis = 1, inplace=True)
-        
-# Identify dependent and independent variables:
-Y = news['gt3400']
-X = news.drop(['gt3400'], axis=1)
+       'self_reference_min_shares', 'self_reference_max_shares', 'weekday_is_monday', 'weekday_is_tuesday',
+       'weekday_is_wednesday', 'weekday_is_thursday', 'weekday_is_friday', 'weekday_is_saturday',
+       'weekday_is_sunday','shares','rate_positive_words','rate_negative_words', 'min_positive_polarity',
+       'max_positive_polarity','min_negative_polarity','max_negative_polarity','title_subjectivity',
+       'title_sentiment_polarity'], 
+          axis = 1, inplace=True)
 
-# Randomly create train(.67) and test(.33) data split
+# Identify dependent and independent variables:
+Y = news['gt2800']
+X = news.drop(['gt2800'], axis=1)
+
+# Randomly create train(.67) and test(.33) data sets
 x, xt, y, yt = train_test_split(X, Y, test_size = 0.33, random_state=42)
 
 # y based matrices flattened for ease with machine learning codes
 y = np.ravel(y)
 yt = np.ravel(yt)
 
-# Obtaining descriptive statistics of how many and what percent of each subset are successes
+# Obtaining descriptive statistics for how many and what percent of each data set is a success
 print(np.sum(y))
 print(np.sum(yt))
 print(100*np.mean(y))
 print(100*np.mean(yt))
 
-# # Obtaining codes to implement a decision tree
+# Obtaining codes to implement a decision tree
 from sklearn.ensemble import RandomForestClassifier, BaggingClassifier, GradientBoostingClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import f1_score
 model = DecisionTreeClassifier()
 
 # Generate the decision tree model
-tree = DecisionTreeClassifier(max_depth=5,min_samples_leaf=10)
+tree = DecisionTreeClassifier(max_depth=20,min_samples_leaf=5)
 # Fit the tree to the training data
 tclf = tree.fit(x, y)
 # Make predictions
@@ -88,8 +98,8 @@ print("\nThe decision tree has f1 score of : %s\n" %str(f1_score(tpred, yt)))
 yt1 = yt + tpred
 print("\nThe correct number of predicts are : %s\n" %str((yt1 == 2).sum()))
 
-# Generate the random forest model and iterate with n=10, n=100 and n=150
-forest = RandomForestClassifier(n_estimators=150, n_jobs = -1, random_state=42)
+# Generate the random forest model and iterate with n=10
+forest = RandomForestClassifier(n_estimators=10, n_jobs = -1, random_state=42)
 # Fit the model to the training data
 fclf = forest.fit(x, y)
 # Make predictions
@@ -97,12 +107,12 @@ fpred = fclf.predict(xt)
 # Print the accuracy score of the fitted model
 print("The random forest has an accuracy of : %s\n" % str(accuracy_score(fpred, yt)))
 print("\nThe random has f1 score of : %s\n" %str(f1_score(fpred, yt)))
-# Correct successes predicted
+# Correct quits predicted
 yt2 = yt + fpred
 print("\nThe correct number of predicts are : %s\n" %str((yt2 == 2).sum()))
 
 # Generate the boosting model, also with n=100
-boost = GradientBoostingClassifier(n_estimators=100, max_depth=15, min_samples_leaf=10, random_state=42)
+boost = GradientBoostingClassifier(n_estimators=100, max_depth=20, min_samples_leaf=5, random_state=42)
 # Fit the model to the training data
 boclf = boost.fit(x, y)
 # Make predictions
@@ -115,7 +125,7 @@ yt3 = yt + bopred
 print("\nThe correct number of predicts are : %s\n" %str((yt3 == 2).sum()))
 
 # Generate the bagging model, with n=100
-bag = BaggingClassifier(n_estimators=150, n_jobs = -1, random_state=42)
+bag = BaggingClassifier(n_estimators=10, n_jobs = -1, random_state=42)
 # Fit the model to the training data
 baclf = bag.fit(x, y)
 # Make predictions
@@ -127,4 +137,18 @@ print("\nThe random has f1 score of : %s\n" %str(f1_score(bapred, yt)))
 yt4 = yt + bapred
 print("\nThe correct number of predicts are : %s\n" %str((yt4 == 2).sum()))
 
+# Linear regression model:
+import statsmodels.api as sm
+x = sm.add_constant(x)
+model = sm.OLS(y, x).fit()
+model.summary()
 
+# Predictions using regression model
+xt = sm.add_constant(xt)
+predictions = model.predict(xt)
+
+yt5 = yt + predictions
+print("\nThe correct number of predicts are : %s\n" %str((yt5 == 2).sum()))
+
+# Number of successes in test data:
+print(((yt==1).sum()))
