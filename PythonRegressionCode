@@ -1,0 +1,99 @@
+# Import relevant libraries
+import pandas as pd
+import numpy as np
+import patsy as pt
+import datetime
+from sklearn import tree
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier,\
+	BaggingClassifier, GradientBoostingClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+from sklearn.svm import SVC
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+### IMPORT DATA, PERFORM PRE-PROCESSING
+
+news = pd.read_csv('C:\\Users\\molly\\Documents\\School\\ISQA8700\\OnlineNewsPopularity.csv')
+
+# Look at columns to gain familiarity with the data
+# news.columns
+
+# Dropping data for ease of handling 
+news.drop(['url', ' timedelta'], axis = 1, inplace=True)
+
+
+# eliminate leading space from variable names
+news.columns = news.columns.str.strip()
+
+
+# news.columns
+
+# news.head(10)
+
+pd.to_numeric(news['shares'], errors='coerce')
+
+# print(news.dtypes)
+
+# Add an indicator for shares greater than or equal to 2800 (1) or less than 2800 (0).
+def f(row):
+    if row['shares'] < 2800:
+        val = 0
+    else:
+        val = 1
+    return val
+
+news['gt2800'] = news.apply(f, axis=1)
+
+# news.head(10)
+
+# Obtain number of successes and thier occurance in entire data. 
+print(np.sum(news['gt2800']))
+print(len(news.index))
+
+### Does not converge when this is done
+# take log of 'n_tokens_content' the number of words in each article
+# news['n_tokens_log'] = news['n_tokens_content'].apply(np.log)
+#for n_tokens_log in news:
+#    print(news['n_tokens_log'].unique())
+# where_are_NaNs = np.isnan(news['n_tokens_log'])
+# news[where_are_NaNs] = 0
+
+# Dropping data that is too highly correlated, or represented by another field
+news.drop(['data_channel_is_world', 'kw_min_min', 'kw_max_min', 'kw_min_max', 'kw_max_max', 'kw_max_avg',
+       'self_reference_min_shares', 'self_reference_max_shares', 'weekday_is_monday', 'weekday_is_tuesday',
+       'weekday_is_wednesday', 'weekday_is_thursday', 'weekday_is_friday', 'weekday_is_saturday',
+       'weekday_is_sunday','shares','rate_positive_words','rate_negative_words', 'min_positive_polarity',
+       'max_positive_polarity','min_negative_polarity','max_negative_polarity','title_subjectivity',
+       'title_sentiment_polarity', 'n_unique_tokens', 'n_non_stop_unique_tokens', 'num_videos',
+       'global_sentiment_polarity','global_rate_negative_words', 'n_tokens_title', 'global_rate_positive_words'], 
+          axis = 1, inplace=True)
+
+# Identify dependent and independent variables:
+Y = news['gt2800']
+X = news.drop(['gt2800'], axis=1)
+
+# Randomly create train(.67) and test(.33) data sets
+x, xt, y, yt = train_test_split(X, Y, test_size = 0.33, random_state=42)
+
+# y based matrices flattened for ease with machine learning codes
+y = np.ravel(y)
+yt = np.ravel(yt)
+
+# Obtaining descriptive statistics for how many and what percent of each data set is a success
+print(np.sum(y))
+print(np.sum(yt))
+print(100*np.mean(y))
+print(100*np.mean(yt))
+
+# Run Least Squares Regression Model
+import statsmodels.api as sm
+
+x = sm.add_constant(x)
+model = sm.OLS(y, x).fit()
+model.summary()
+
+# Use Model to predict on test data
+xt = sm.add_constant(xt)
+predictions = model.predict(xt)
