@@ -67,7 +67,8 @@ news.drop(['data_channel_is_world', 'kw_min_min', 'kw_max_min', 'kw_min_max', 'k
        'weekday_is_sunday','shares','rate_positive_words','rate_negative_words', 'min_positive_polarity',
        'max_positive_polarity','min_negative_polarity','max_negative_polarity','title_subjectivity',
        'title_sentiment_polarity', 'n_unique_tokens', 'n_non_stop_unique_tokens', 'num_videos',
-       'global_sentiment_polarity','global_rate_negative_words', 'n_tokens_title', 'global_rate_positive_words'], 
+       'global_sentiment_polarity','global_rate_negative_words', 'n_tokens_title', 'global_rate_positive_words',
+       'n_non_stop_words', 'data_channel_is_lifestyle','kw_min_avg','LDA_00','LDA_01','LDA_02','LDA_03','LDA_04'], 
           axis = 1, inplace=True)
 
 # Identify dependent and independent variables:
@@ -97,3 +98,32 @@ model.summary()
 # Use Model to predict on test data
 xt = sm.add_constant(xt)
 predictions = model.predict(xt)
+
+# Look at ROC curve to determine definition of success in predictions
+# calculate the fpr and tpr for all thresholds of the classification
+from sklearn import metrics
+
+fpr, tpr, threshold = metrics.roc_curve(yt, predictions)
+roc_auc = metrics.auc(fpr, tpr)
+
+import matplotlib.pyplot as plt
+plt.title('Receiver Operating Characteristic')
+plt.plot(fpr, tpr, 'b', label = 'AUC = %0.2f' % roc_auc)
+plt.legend(loc = 'lower right')
+plt.plot([0, 1], [0, 1],'r--')
+plt.xlim([0, 1])
+plt.ylim([0, 1])
+plt.ylabel('True Positive Rate')
+plt.xlabel('False Positive Rate')
+plt.show()
+
+# Based on ROC curve, test yt cut-off values of .20, .30, .35, and .40
+print(((predictions>.35).sum()))
+
+# Sum the actual result with the test prediction for each. If the sum is greater than 1 + cut-off then the prediction 
+# of going viral is correct:
+yt5 = yt + predictions
+print("\nThe correct number of predicts are : %s\n" %str((yt5 >= 1.35).sum()))
+
+# Create a confusion matrix, include the cut-off for definition of success:
+metrics.confusion_matrix(yt, predictions>=.35, labels=None, sample_weight=None)
