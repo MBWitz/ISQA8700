@@ -1,0 +1,60 @@
+#### Data set source:
+#### https://archive.ics.uci.edu/ml/datasets/online+news+popularity#
+
+#### load data, view summary and eliminate non-predictive columns:
+```{r}
+news <- read.csv("C:\\Users\\molly\\Documents\\School\\ISQA8700\\OnlineNewsPopularity.csv")
+#summary(news)
+news2<- news[-1]
+news2<- news2[-1]
+```
+
+#### correlation heatmap and list of correlations higher than .5:
+```{r}
+correlations = cor(news2)
+library(ggcorrplot)
+ggcorrplot(correlations)
+#corRelevant <- which(abs(correlations) > 0.50, arr.ind=TRUE)
+#show(corRelevant)
+#class(corRelevant)
+```
+
+#### Define Sucess:
+```{r}
+news2$success <- news2$shares>1800
+```
+
+#### kmeans clustering:
+```{r}
+#fit<-kmeans(news2,2)
+#aggregate(news2, by=list(fit$cluster), FUN=mean)
+#news3 <- data.frame(news2, fit$cluster)
+```
+
+#### drop correlated data:
+```{r}
+dropList <- c('data_channel_is_world', 'kw_min_min', 'kw_max_min', 'kw_min_max', 'kw_max_max', 'kw_max_avg','self_reference_min_shares', 'self_reference_max_shares', 'weekday_is_monday', 'weekday_is_tuesday','weekday_is_wednesday', 'weekday_is_thursday', 'weekday_is_friday', 'weekday_is_saturday', 'weekday_is_sunday','shares','rate_positive_words','rate_negative_words', 'min_positive_polarity','max_positive_polarity','min_negative_polarity','max_negative_polarity','title_subjectivity','title_sentiment_polarity')
+newsDT<- news2[,!(names(news2)%in% dropList)]
+```
+
+#### split into train and test:
+```{r}
+train<-newsDT[1:26561,]
+test<-newsDT[26561:39644,]
+```
+
+#### Decision tree:
+```{r}
+library(rpart)
+fit<-rpart(train$success~., train, method="class")
+plot(fit)
+text(fit)
+print(fit)
+```
+
+#### Predict using Decision tree:
+```{r}
+predict<-predict(fit, test, type = c("vector"))
+test2<-data.frame(test, predict)
+table(test2$success, test2$predict)
+```
